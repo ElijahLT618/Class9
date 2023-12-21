@@ -1,24 +1,25 @@
-from flask import Flask, request, redirect, render_template
+from flask import Flask, request, render_template, redirect
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 app.config['DEBUG'] = True
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://get-it-done-c9:890test890@localhost:8889/get-it-done-c9'
+app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://postgres:Theisen1976@localhost:5432/class9"
 app.config['SQLALCHEMY_ECHO'] = True
+
 db = SQLAlchemy()
 db.init_app(app)
-with app.app_context():
-    db.create_all()
 
 class Task(db.Model):
-
+    __tablename__ = 'tasks'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120))
+    task = db.Column(db.String(120))
+    completed = db.column(db.Boolean)
 
-    def __init__(self, name):
+    def __init__(self, id, name, task):
         self.name = name
-
-
+        self.id = id
+        self.task = task
 
 tasks = []
 
@@ -26,11 +27,26 @@ tasks = []
 def index():
 
     if request.method == 'POST':
-        task = request.form['task']
-        tasks.append(task)
+        task_name = request.form['task']
+        new_task = Task(task_name)
+        db.session.add(new_task)
+        db.session.commit()
 
-    return render_template('todos.html',title="Get It Done!", tasks=tasks)
+    tasks = Task.query.filter_by(completed=False).all()
+    completed_tasks = Task.query.filter_by(completed=True).all()
+    return render_template('todos.html',title="Get It Done!", tasks=tasks, completed_tasks = completed_tasks)
 
+@app.route('/delete-task', methods=['POST'])
+def delete_task():
+
+    task_id = int(request.form['task-id'])
+    task  = Task.query.get(task_id)
+    db.session.delete(task)
+    db.session.commit()
+
+    return redirect('/')
 
 if __name__ == '__main__':
-    app.run()
+    with app.app_context():
+       db.create_all()
+    app.run(debug=True)
