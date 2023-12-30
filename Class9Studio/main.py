@@ -3,13 +3,12 @@ from flask_sqlalchemy import SQLAlchemy
 import cgi
 
 app = Flask(__name__)
-app.config['DEBUG'] = True      # displays runtime errors in the browser, too
+app.config['DEBUG'] = True      
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:Theisen1976@localhost:5432/Flicklist'
 app.config['SQLALCHEMY_ECHO'] = True
 
 db = SQLAlchemy(app)
-db.init_app()
-
+db.init_app(app)
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -184,4 +183,4 @@ def require_login():
 if __name__ == "__main__":
     with app.app_connect():
         db.create_all()
-    app.run()
+app.run()
